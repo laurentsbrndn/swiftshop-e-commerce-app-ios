@@ -5,6 +5,8 @@
 ////  Created by Laurentius Brandon Vikario on 08/09/26.
 ////
 
+import SwiftUI
+
 struct AddressRow: View {
     let address: CustomerAddressResponse
     let onEdit: () -> Void
@@ -48,20 +50,18 @@ struct AddressRow: View {
     }
 }
 
-import SwiftUI
-
 struct ShippingAddressView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @StateObject private var viewModel = ShippingAddressViewModel()
     
-    @State private var showingForm = false
     @State private var addressToEdit: CustomerAddressResponse?
+    @State private var showingNewAddressForm = false
     
     var body: some View {
-        List {
+        Group {
             if viewModel.isLoading && viewModel.addresses.isEmpty {
                 ProgressView()
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.addresses.isEmpty {
                 ContentUnavailableView(
                     "No Address Found",
@@ -69,13 +69,23 @@ struct ShippingAddressView: View {
                     description: Text("You haven't added any shipping addresses yet.")
                 )
             } else {
-                ForEach(viewModel.addresses) { address in
-                    AddressRow(address: address) {
-                        addressToEdit = address
-                        showingForm = true
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(viewModel.addresses) { address in
+                            AddressRow(address: address) {
+                                addressToEdit = address
+                            }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                            )
+                        }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
-                .onDelete(perform: delete) 
+                .background(Color(uiColor: .systemGroupedBackground))
             }
         }
         .navigationTitle("Shipping Addresses")
@@ -83,18 +93,26 @@ struct ShippingAddressView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    addressToEdit = nil
-                    showingForm = true
+                    showingNewAddressForm = true
                 } label: {
                     Image(systemName: "plus")
                 }
             }
         }
-        .sheet(isPresented: $showingForm) {
+        .sheet(item: $addressToEdit) { address in
             NavigationStack {
                 ShippingAddressFormView(
                     viewModel: viewModel,
-                    editingAddress: addressToEdit,
+                    editingAddress: address,
+                    token: sessionManager.token
+                )
+            }
+        }
+        .sheet(isPresented: $showingNewAddressForm) {
+            NavigationStack {
+                ShippingAddressFormView(
+                    viewModel: viewModel,
+                    editingAddress: nil,
                     token: sessionManager.token
                 )
             }
@@ -108,14 +126,6 @@ struct ShippingAddressView: View {
             Task {
                 await viewModel.fetchAddresses(token: sessionManager.token)
             }
-        }
-    }
-    
-    private func delete(at offsets: IndexSet) {
-        guard let index = offsets.first else { return }
-        let address = viewModel.addresses[index]
-        Task {
-            _ = await viewModel.deleteAddress(token: sessionManager.token, id: address.id)
         }
     }
 }

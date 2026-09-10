@@ -1,10 +1,3 @@
-////
-////  ShippingAddressFormView.swift
-////  simple-e-commerce-app-ios
-////
-////  Created by Laurentius Brandon Vikario on 08/09/26.
-////
-
 import SwiftUI
 
 struct ShippingAddressFormView: View {
@@ -91,29 +84,35 @@ struct ShippingAddressFormView: View {
             }
         }
         .onAppear {
-            if let addr = editingAddress {
-                label = addr.label
-                recipientName = addr.recipientName
-                recipientPhone = addr.recipientPhone
-                addressLine = addr.addressLine
-                city = addr.city
-                state = addr.state
-                postalCode = addr.postalCode
-                countryCode = addr.countryCode
-                isDefault = addr.isDefault
-            }
+            populateFields()
         }
-        .confirmationDialog(
+        .onChange(of: editingAddress) { _ in
+            populateFields()
+        }
+        .alert(
             "Delete Address",
-            isPresented: $showingDeleteConfirmation,
-            titleVisibility: .visible
+            isPresented: $showingDeleteConfirmation
         ) {
+            Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 deleteAction()
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to delete this address?")
+        }
+    }
+    
+    private func populateFields() {
+        if let addr = editingAddress {
+            label = addr.label
+            recipientName = addr.recipientName
+            recipientPhone = addr.recipientPhone
+            addressLine = addr.addressLine
+            city = addr.city
+            state = addr.state
+            postalCode = addr.postalCode
+            countryCode = addr.countryCode
+            isDefault = addr.isDefault
         }
     }
     
