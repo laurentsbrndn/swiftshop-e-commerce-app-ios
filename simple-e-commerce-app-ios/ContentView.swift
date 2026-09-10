@@ -8,17 +8,21 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var sessionManager: SessionManager
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        Group {
+            if sessionManager.isAuthenticated {
+                MainTabView()
+            } else {
+                LoginView()
+            }
+        }  
+        .animation(.default, value: sessionManager.isAuthenticated)
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(SessionManager())
 }

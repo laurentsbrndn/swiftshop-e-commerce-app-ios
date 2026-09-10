@@ -8,10 +8,13 @@
 import SwiftUI
 
 @main
-struct simple_e_commerce_app_iosApp: App {
+struct SimpleCommerceApp: App {
+    @StateObject private var sessionManager = SessionManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(sessionManager)
         }
     }
 }
